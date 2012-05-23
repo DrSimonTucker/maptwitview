@@ -27,7 +27,7 @@ public class TwitMapModel
 
    private void update()
    {
-      for (SocialPost post : TwitterProxy.getSolrData(10000))
+      for (SocialPost post : TwitterProxy.getSolrData(100, true))
          if (post != null && !posts.contains(post))
             posts.add(post);
       System.out.println(posts.size() + " read");

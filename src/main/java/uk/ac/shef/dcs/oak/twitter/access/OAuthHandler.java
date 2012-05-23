@@ -1,24 +1,17 @@
 package uk.ac.shef.dcs.oak.twitter.access;
 
-import java.awt.Desktop;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.URL;
 import java.util.Properties;
-
-import javax.swing.JOptionPane;
-
-import org.scribe.http.Request;
-import org.scribe.http.Request.Verb;
-import org.scribe.http.Response;
-import org.scribe.oauth.Scribe;
-import org.scribe.oauth.Token;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * My class for dealing with Twitter OAuth and related functionality
@@ -28,8 +21,6 @@ import org.scribe.oauth.Token;
  */
 public class OAuthHandler
 {
-   /** The scribe singleton for handling OAuth */
-   private static Scribe scribeSingleton;
 
    /**
     * Tester method
@@ -90,57 +81,6 @@ public class OAuthHandler
    }
 
    /**
-    * Gets the access token for authentication
-    * 
-    * @return A valid Access Token
-    * @throws IOException
-    *            if the tokens cannot be found
-    */
-   private Token getAccessToken() throws IOException
-   {
-      File accessTokenFile = new File(System.getProperty("user.home") + File.separator
-            + ".com262token");
-
-      if (!accessTokenFile.exists())
-         try
-         {
-            Scribe scribe = getScribe();
-            Token tok = scribe.getRequestToken();
-
-            // Take the user to the login page
-            String url = "https://twitter.com/oauth/authenticate?oauth_token=" + tok.getToken();
-            Desktop.getDesktop().browse(new URI(url));
-
-            String verifier = JOptionPane.showInputDialog("Enter PIN Code:");
-            Token aTok = scribe.getAccessToken(tok, verifier);
-
-            // Store the access token
-            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(accessTokenFile));
-            oos.writeObject(aTok);
-            oos.close();
-         }
-
-         catch (URISyntaxException e)
-         {
-            e.printStackTrace();
-         }
-
-      try
-      {
-         ObjectInputStream ois = new ObjectInputStream(new FileInputStream(accessTokenFile));
-         Token tok = (Token) ois.readObject();
-         ois.close();
-         return tok;
-      }
-      catch (ClassNotFoundException e)
-      {
-         e.printStackTrace();
-      }
-
-      return null;
-   }
-
-   /**
     * Method to get all the public timeline statuses
     * 
     * @param optIn
@@ -173,14 +113,17 @@ public class OAuthHandler
 
       try
       {
-         Token aToken = getAccessToken();
-         Scribe scribe = getScribe();
-         Request request = new Request(Verb.GET, url);
-         scribe.signRequest(request, aToken);
-         Response resp = request.send();
-         return resp.getBody();
+         String text = "";
+         System.out.println("Getting " + url);
+         BufferedReader reader = new BufferedReader(
+               new InputStreamReader(new URL(url).openStream()));
+         for (String line = reader.readLine(); line != null; line = reader.readLine())
+            text += line;
+         reader.close();
+
+         return text;
       }
-      catch (RuntimeException e)
+      catch (IOException e)
       {
          // Ignore
       }
@@ -188,11 +131,20 @@ public class OAuthHandler
       return "";
    }
 
-   private String getBody(final String url)
+   private String getBody(final String url) throws IOException
    {
-      Request request = new Request(Verb.GET, url);
-      Response resp = request.send();
-      return resp.getBody();
+      return getBody(url, true);
+   }
+
+   private String getBody(File f) throws IOException
+   {
+      String lines = "";
+      BufferedReader reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(
+            new FileInputStream(f))));
+      for (String line = reader.readLine(); line != null; line = reader.readLine())
+         lines += line;
+      reader.close();
+      return lines;
    }
 
    /**
@@ -212,8 +164,25 @@ public class OAuthHandler
 
    public final String getSolrData(int n) throws IOException
    {
-      return getBody("http://nebula.dcs.shef.ac.uk/solr/select/?q=*%3A*&version=2.2&start=0&rows="
-            + n + "&indent=on");
+      String url = "http://nebula.dcs.shef.ac.uk/solr/select/?q=*%3A*&version=2.2&start=0&rows="
+            + n + "&indent=on";
+      File rF = new File("tmp/" + n + ".txt.gz");
+      if (rF.exists())
+         return getBody(rF);
+
+      String body = getBody(url);
+      try
+      {
+         rF.createNewFile();
+         PrintStream ps = new PrintStream(new GZIPOutputStream(new FileOutputStream(rF)));
+         ps.print(body);
+         ps.close();
+      }
+      catch (IOException e)
+      {
+         e.printStackTrace();
+      }
+      return body;
    }
 
    /**
@@ -265,20 +234,6 @@ public class OAuthHandler
       fis.close();
 
       return props;
-   }
-
-   /**
-    * Helper method to get the scribe singleton
-    * 
-    * @return {@link Scribe} object
-    * @throws IOException
-    *            If something goes wrong with Scribe
-    */
-   private Scribe getScribe() throws IOException
-   {
-      if (scribeSingleton == null)
-         scribeSingleton = new Scribe(getProperties());
-      return scribeSingleton;
    }
 
    public final String getSubscribers(final String owner, final String list) throws IOException

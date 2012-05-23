@@ -1,5 +1,6 @@
 package uk.ac.shef.dcs.oak.twitter.view;
 
+import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.LinkedList;
@@ -27,7 +28,6 @@ import uk.ac.shef.dcs.oak.twitter.model.TwitMapModel;
  */
 public class MapPanel extends JMapViewer implements ModelListener
 {
-
    @Override
    public void modelUpdated(TwitMapModel newModel)
    {
@@ -71,8 +71,11 @@ public class MapPanel extends JMapViewer implements ModelListener
    public static void main(String[] args)
    {
       JFrame framer = new JFrame();
+      framer.setLayout(new GridLayout(1, 2));
       MapPanel panel = new MapPanel();
-      framer.add(panel);
+      framer.add(panel, 0);
+      TweetList list = new TweetList();
+      framer.add(list, 1);
       framer.setSize(500, 500);
       framer.setLocationRelativeTo(null);
       framer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -82,6 +85,7 @@ public class MapPanel extends JMapViewer implements ModelListener
 
       TwitMapModel model = new TwitMapModel();
       model.addListener(panel);
+      model.addListener(list);
    }
 
    /**

@@ -10,7 +10,7 @@ import uk.ac.shef.dcs.oak.twitter.SocialPost;
  */
 public interface Filter
 {
-   public double filter(SocialPost post);
+   public boolean filter(SocialPost post);
 
    public double getFuzzy();
 }

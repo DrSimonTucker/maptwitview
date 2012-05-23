@@ -25,77 +25,12 @@ import uk.ac.shef.dcs.oak.twitter.SocialPost;
  */
 public final class TwitterProxy
 {
-
-   /** The Authentication handler */
    private static OAuthHandler handler = new OAuthHandler();
-
    /** Flag to indicate we have opted in to twitter */
    private static boolean optIn = true;
 
    private static final int NUMBER_OF_POSTS = 1000;
 
-   public static SocialPost[] getFeedList(String provider, String list)
-   {
-      SocialPost[] tweetArr = new SocialPost[NUMBER_OF_POSTS];
-      try
-      {
-         String xmlString = handler.getList(provider, list, optIn, 10);
-         parse(xmlString, new Tweets(tweetArr));
-      }
-      catch (IOException e)
-      {
-         e.printStackTrace();
-      }
-
-      for (SocialPost post : tweetArr)
-         if (post != null)
-            post.setSource(list);
-
-      return tweetArr;
-   }
-
-   public static SocialPost[] getFeedList(String provider, String list, int numberOfPosts)
-   {
-      SocialPost[] tweetArr = new SocialPost[numberOfPosts];
-      try
-      {
-         int page = 1;
-         while (tweetArr[tweetArr.length - 1] == null)
-         {
-            // System.out.println("Processing page " + page);
-            String xmlString = handler.getList(provider, list, optIn, page++);
-            // System.out.println(xmlString);
-            parse(xmlString, new Tweets(tweetArr));
-         }
-      }
-      catch (IOException e)
-      {
-         e.printStackTrace();
-      }
-
-      for (SocialPost post : tweetArr)
-         if (post != null)
-            post.setSource(list);
-
-      return tweetArr;
-   }
-
-   public static TreeSet<String> getFeedUsers(String owner, String list)
-   {
-      TreeSet<String> users = new TreeSet<String>();
-      try
-      {
-         String xmlString = handler.getSubscribers(owner, list);
-         parse(xmlString, users);
-      }
-      catch (IOException e)
-      {
-         e.printStackTrace();
-      }
-
-      return users;
-   }
-
    /**
     * Get the Tweets from your friends
     * 
@@ -103,53 +38,20 @@ public final class TwitterProxy
     *           The number of tweets to collect
     * @return An array of the available tweets
     */
-   public static SocialPost[] getFriendsTweets(final int n)
+   public static SocialPost[] getSolrData(final int n, boolean geo)
    {
       SocialPost[] tweetArr = new SocialPost[n];
       int read = 0;
-      int page = 1;
+      int page = 1000;
       try
       {
          while (read < n)
          {
-            String xmlString = handler.getFriends(optIn, page++);
-            int readNumber = parse(xmlString, new Tweets(tweetArr));
-            if (readNumber == 0)
-               break;
-            else
-               read += readNumber;
-         }
-      }
-      catch (IOException e)
-      {
-         e.printStackTrace();
-      }
-
-      return tweetArr;
-   }
-
-   /**
-    * Get the Tweets from your friends
-    * 
-    * @param n
-    *           The number of tweets to collect
-    * @return An array of the available tweets
-    */
-   public static SocialPost[] getSolrData(final int n)
-   {
-      SocialPost[] tweetArr = new SocialPost[n];
-      int read = 0;
-      int page = 1;
-      try
-      {
-         while (read < n)
-         {
-            String xmlString = handler.getSolrData(n);
-            int readNumber = parse(xmlString, new SPSolrHandler(tweetArr));
-            if (readNumber == 0)
-               break;
-            else
-               read += readNumber;
+            System.out.println("Reading " + page + " rows");
+            String xmlString = handler.getSolrData(page);
+            int readNumber = parse(xmlString, new SPSolrHandler(tweetArr, geo));
+            read = readNumber;
+            page *= 2;
          }
       }
       catch (IOException e)
@@ -186,9 +88,11 @@ public final class TwitterProxy
 
    public static void main(String[] args)
    {
-      SocialPost[] data = TwitterProxy.getSolrData(10);
+      SocialPost[] data = TwitterProxy.getSolrData(100, true);
       System.out.println(data.length);
+      System.out.println(data[0]);
       System.out.println(data[0].getText());
+      System.out.println(data[0].getLat());
    }
 
    /**

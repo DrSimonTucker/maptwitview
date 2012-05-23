@@ -21,6 +21,8 @@ public class SPSolrHandler extends DefaultHandler
    /** The text of the tweet */
    private String tweetText;
 
+   private boolean rejectNonGeo = false;
+
    /** The user creating the tweet */
    private String user;
 
@@ -70,12 +72,13 @@ public class SPSolrHandler extends DefaultHandler
     * @param toFill
     *           The array of tweets we wish to fill
     */
-   public SPSolrHandler(final SocialPost[] toFill)
+   public SPSolrHandler(final SocialPost[] toFill, boolean geo)
    {
       tweetArr = toFill;
+      rejectNonGeo = geo;
 
       // Adjust the pointer to the first non-null entry
-      while (toFill[pointer] != null)
+      while (pointer < toFill.length && toFill[pointer] != null)
          pointer++;
    }
 
@@ -99,7 +102,8 @@ public class SPSolrHandler extends DefaultHandler
       if ((localName + qName).equals("doc"))
       {
          if (pointer < tweetArr.length)
-            tweetArr[pointer++] = new SocialPost(tweetText, user, time, imageURL, lat, lon);
+            if (!rejectNonGeo || lat != 0)
+               tweetArr[pointer++] = new SocialPost(tweetText, user, time, imageURL, lat, lon);
          lat = 0;
          lon = 0;
          lastRead += 1;
