@@ -108,7 +108,7 @@ public class SPSolrHandler extends DefaultHandler
          lon = 0;
          lastRead += 1;
       }
-      else if (named.equals("text_t"))
+      else if (named.equals("original_text_s"))
          tweetText = text;
       else if (named.equals("username_s"))
          user = text;
