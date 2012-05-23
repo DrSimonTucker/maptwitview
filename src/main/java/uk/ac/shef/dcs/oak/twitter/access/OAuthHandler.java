@@ -1,4 +1,4 @@
-package uk.ac.shef.dcs.oak.twitter;
+package uk.ac.shef.dcs.oak.twitter.access;
 
 import java.awt.Desktop;
 import java.io.File;
@@ -188,6 +188,13 @@ public class OAuthHandler
       return "";
    }
 
+   private String getBody(final String url)
+   {
+      Request request = new Request(Verb.GET, url);
+      Response resp = request.send();
+      return resp.getBody();
+   }
+
    /**
     * Gets the status of all your friends on twitter
     * 
@@ -201,6 +208,12 @@ public class OAuthHandler
    {
       return getBody("http://api.twitter.com/1/statuses/friends_timeline.xml?count=200&page="
             + page, optIn);
+   }
+
+   public final String getSolrData(int n) throws IOException
+   {
+      return getBody("http://nebula.dcs.shef.ac.uk/solr/select/?q=*%3A*&version=2.2&start=0&rows="
+            + n + "&indent=on");
    }
 
    /**

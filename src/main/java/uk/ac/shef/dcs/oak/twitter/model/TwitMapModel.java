@@ -4,17 +4,47 @@ import java.util.LinkedList;
 import java.util.List;
 
 import uk.ac.shef.dcs.oak.twitter.SocialPost;
+import uk.ac.shef.dcs.oak.twitter.access.TwitterProxy;
 
 public class TwitMapModel
 {
    List<SocialPost> posts = new LinkedList<SocialPost>();
+   List<ModelListener> listeners = new LinkedList<ModelListener>();
+   List<Filter> filters = new LinkedList<Filter>();
 
-   public TwitMapModel(SocialPost[] allPosts)
+   public TwitMapModel()
    {
-      for (SocialPost post : allPosts)
-         if (post != null)
+      Thread updateThread = new Thread(new Runnable()
+      {
+         @Override
+         public void run()
+         {
+            update();
+         }
+      });
+      updateThread.start();
+   }
+
+   private void update()
+   {
+      for (SocialPost post : TwitterProxy.getSolrData(10000))
+         if (post != null && !posts.contains(post))
             posts.add(post);
       System.out.println(posts.size() + " read");
+
+      updateListeners();
+   }
+
+   public void addListener(ModelListener listener)
+   {
+      listeners.add(listener);
+      listener.modelUpdated(this);
+   }
+
+   private void updateListeners()
+   {
+      for (ModelListener listener : listeners)
+         listener.modelUpdated(this);
    }
 
    public List<SocialPost> getGeoPosts()

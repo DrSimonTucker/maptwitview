@@ -1,4 +1,4 @@
-package uk.ac.shef.dcs.oak.twitter;
+package uk.ac.shef.dcs.oak.twitter.access;
 
 import java.util.Set;
 import java.util.TreeSet;

@@ -1,4 +1,4 @@
-package uk.ac.shef.dcs.oak.twitter;
+package uk.ac.shef.dcs.oak.twitter.access;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -7,6 +7,8 @@ import java.text.SimpleDateFormat;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import uk.ac.shef.dcs.oak.twitter.SocialPost;
 
 /**
  * XML Handler for tweet streams

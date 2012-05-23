@@ -16,7 +16,7 @@ import org.openstreetmap.gui.jmapviewer.interfaces.MapPolygon;
 import org.openstreetmap.gui.jmapviewer.interfaces.MapRectangle;
 
 import uk.ac.shef.dcs.oak.twitter.SocialPost;
-import uk.ac.shef.dcs.oak.twitter.TwitterProxy;
+import uk.ac.shef.dcs.oak.twitter.model.ModelListener;
 import uk.ac.shef.dcs.oak.twitter.model.TwitMapModel;
 
 /**
@@ -25,14 +25,20 @@ import uk.ac.shef.dcs.oak.twitter.model.TwitMapModel;
  * @author sat
  * 
  */
-public class MapPanel extends JMapViewer
+public class MapPanel extends JMapViewer implements ModelListener
 {
+
+   @Override
+   public void modelUpdated(TwitMapModel newModel)
+   {
+      model = newModel;
+      zoom();
+   }
+
    TwitMapModel model;
 
-   public MapPanel(TwitMapModel model)
+   public MapPanel()
    {
-      this.model = model;
-
       this.addMouseListener(new MouseAdapter()
       {
          @Override
@@ -46,23 +52,26 @@ public class MapPanel extends JMapViewer
 
    private void zoom()
    {
-      // Add a marker on my house
-      List<MapMarker> markers = new LinkedList<MapMarker>();
-      for (SocialPost post : model.getGeoPosts())
+      if (model != null)
       {
-         System.out.println(post.getLat() + " and " + post.getLon());
-         MapMarker m = new MapMarkerDot(post.getLat(), post.getLon());
-         markers.add(m);
+         // Add a marker on my house
+         List<MapMarker> markers = new LinkedList<MapMarker>();
+         for (SocialPost post : model.getGeoPosts())
+         {
+            System.out.println(post.getLat() + " and " + post.getLon());
+            MapMarker m = new MapMarkerDot(post.getLat(), post.getLon());
+            markers.add(m);
+         }
+         this.setMapMarkerList(markers);
+         this.setDisplayToFitMapMarkers();
+         System.out.println(this.getMapMarkerList());
       }
-      this.setMapMarkerList(markers);
-      this.setDisplayToFitMapMarkers();
-      System.out.println(this.getMapMarkerList());
    }
 
    public static void main(String[] args)
    {
       JFrame framer = new JFrame();
-      MapPanel panel = new MapPanel(new TwitMapModel(TwitterProxy.getFriendsTweets(750)));
+      MapPanel panel = new MapPanel();
       framer.add(panel);
       framer.setSize(500, 500);
       framer.setLocationRelativeTo(null);
@@ -70,6 +79,9 @@ public class MapPanel extends JMapViewer
       framer.setVisible(true);
 
       panel.zoom();
+
+      TwitMapModel model = new TwitMapModel();
+      model.addListener(panel);
    }
 
    /**

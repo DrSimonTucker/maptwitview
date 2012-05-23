@@ -1,4 +1,4 @@
-package uk.ac.shef.dcs.oak.twitter;
+package uk.ac.shef.dcs.oak.twitter.access;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -14,6 +14,8 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import uk.ac.shef.dcs.oak.twitter.SocialPost;
 
 /**
  * Proxy for accessing twitter
@@ -127,6 +129,38 @@ public final class TwitterProxy
    }
 
    /**
+    * Get the Tweets from your friends
+    * 
+    * @param n
+    *           The number of tweets to collect
+    * @return An array of the available tweets
+    */
+   public static SocialPost[] getSolrData(final int n)
+   {
+      SocialPost[] tweetArr = new SocialPost[n];
+      int read = 0;
+      int page = 1;
+      try
+      {
+         while (read < n)
+         {
+            String xmlString = handler.getSolrData(n);
+            int readNumber = parse(xmlString, new SPSolrHandler(tweetArr));
+            if (readNumber == 0)
+               break;
+            else
+               read += readNumber;
+         }
+      }
+      catch (IOException e)
+      {
+         e.printStackTrace();
+      }
+
+      return tweetArr;
+   }
+
+   /**
     * Get the latest public tweets
     * 
     * @param n
@@ -152,14 +186,9 @@ public final class TwitterProxy
 
    public static void main(String[] args)
    {
-      SocialPost[] posts = TwitterProxy.getFriendsTweets(100);
-      System.out.println(posts.length);
-      int geoCount = 0;
-      for (SocialPost post : posts)
-         if (post != null)
-            if (post.getLat() > 0)
-               geoCount++;
-      System.out.println(geoCount);
+      SocialPost[] data = TwitterProxy.getSolrData(10);
+      System.out.println(data.length);
+      System.out.println(data[0].getText());
    }
 
    /**
@@ -253,6 +282,40 @@ public final class TwitterProxy
     *            If something goes wrong with the network
     */
    private static int parse(final String str, final Tweets handlerIn) throws IOException
+   {
+      // Check we haven't opted out
+      if (!optIn)
+         handlerIn.fill();
+      else
+         try
+         {
+            handlerIn.reset();
+            SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
+            parser.parse(new InputSource(new StringReader(str)), handlerIn);
+         }
+         catch (SAXException e)
+         {
+            throw new IOException(e);
+         }
+         catch (ParserConfigurationException e)
+         {
+            throw new IOException(e);
+         }
+      return handlerIn.getLastRead();
+   }
+
+   /**
+    * Helper method for parsing the XML stream
+    * 
+    * @param str
+    *           The String to parse
+    * @param handlerIn
+    *           The handler to use
+    * @return THe handler, having processed the stream
+    * @throws IOException
+    *            If something goes wrong with the network
+    */
+   private static int parse(final String str, final SPSolrHandler handlerIn) throws IOException
    {
       // Check we haven't opted out
       if (!optIn)
