@@ -15,7 +15,8 @@ public class WordCloud extends JPanel implements ModelListener
    {
       // Get the top
       List<String> topWords = newModel.getTopKeyWords(numberOfWords);
-      for (int i = 0; i < buttons.length; i++)
+      System.out.println("Got words = " + topWords.size());
+      for (int i = 0; i < Math.min(buttons.length,topWords.size()); i++)
          buttons[i].setText(topWords.get(i));
    }
 
@@ -26,6 +27,16 @@ public class WordCloud extends JPanel implements ModelListener
    public WordCloud()
    {
       buttons = new JButton[10];
+      initGUI();
+   }
+   
+   private void initGUI()
+   {
+	   for(int i = 0 ; i < buttons.length ; i++)
+	   {
+		   buttons[i] = new JButton();
+		   this.add(buttons[i]);
+	   }
    }
 
 }

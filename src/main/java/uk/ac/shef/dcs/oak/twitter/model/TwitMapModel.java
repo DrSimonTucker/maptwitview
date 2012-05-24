@@ -1,5 +1,7 @@
 package uk.ac.shef.dcs.oak.twitter.model;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +52,7 @@ public class TwitMapModel
    {
       topWords.clear();
 
-      Map<String, Integer> wordCount = new TreeMap<String, Integer>();
+      final Map<String, Integer> wordCount = new TreeMap<String, Integer>();
 
       for (SocialPost post : posts)
          for (String word : post.getWords())
@@ -58,6 +60,17 @@ public class TwitMapModel
                wordCount.put(word, wordCount.get(word) + 1);
             else
                wordCount.put(word, 1);
+      
+      //Sort the words by count order
+      topWords.addAll(wordCount.keySet());
+      Collections.sort(topWords,new Comparator<String>() {
+
+		@Override
+		public int compare(String o1, String o2) {
+			return wordCount.get(o1).compareTo(wordCount.get(o2));
+		}
+    	  
+	});
    }
 
    public void addListener(ModelListener listener)

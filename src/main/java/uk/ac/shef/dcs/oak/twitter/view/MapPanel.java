@@ -71,11 +71,13 @@ public class MapPanel extends JMapViewer implements ModelListener
    public static void main(String[] args)
    {
       JFrame framer = new JFrame();
-      framer.setLayout(new GridLayout(1, 2));
+      framer.setLayout(new GridLayout(3, 1));
       MapPanel panel = new MapPanel();
       framer.add(panel, 0);
       TweetList list = new TweetList();
       framer.add(list, 1);
+      WordCloud cloud = new WordCloud();
+      framer.add(cloud,2);
       framer.setSize(500, 500);
       framer.setLocationRelativeTo(null);
       framer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -86,6 +88,7 @@ public class MapPanel extends JMapViewer implements ModelListener
       TwitMapModel model = new TwitMapModel();
       model.addListener(panel);
       model.addListener(list);
+      model.addListener(cloud);
    }
 
    /**

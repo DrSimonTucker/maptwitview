@@ -4,6 +4,7 @@ import java.awt.Image;
 import java.net.URL;
 import java.text.DateFormat;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -25,7 +26,7 @@ public class SocialPost implements Comparable<SocialPost>
    /** The text of the post */
    private String text;
 
-   private List<String> words;
+   private List<String> words = new LinkedList<String>();
 
    /** The time the post was made */
    private Long time;
@@ -43,7 +44,7 @@ public class SocialPost implements Comparable<SocialPost>
 
    public List<String> getWords()
    {
-      if (words.size() == 0)
+      if (words == null || words.size() == 0)
          words.addAll(Arrays.asList(text.split("\\s+")));
       return words;
    }
